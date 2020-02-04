@@ -229,3 +229,4 @@ print(averageFitness)
 iteration=1:stop
 # Plot the bar chart. 
 plot(iteration,averageFitness)
+
