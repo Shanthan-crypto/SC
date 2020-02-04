@@ -44,3 +44,4 @@ typeof(node_heuristic)
 #print(node_heuristic)
 #node_heuristic<-node_heuristic[names(node_heuristic)!='A']
 #print(node_heuristic)
+
