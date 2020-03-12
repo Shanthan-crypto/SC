@@ -1,1054 +1,474 @@
-##### BFS ######
+Cmeans
 
-library(igraph)
-library(stringr)
-bfs<-function(start,goal){
-  open<-c()
-  closed<-c()
-  i<-1
-  j<-1
-  open[1]<-start
-  while(!is.null(open[1])){
-    n<-open[1]
-    print(n)
-    if(n==goal){
-      closed[j]<-n
-      open=open[-1]
-      print(open)
-      break
-    }
-    closed[j]<-open[i]
-    j<-j+1
-    neighbor=c()
-    k<-1
-    len<-length(adjList[open[i]][[1]])
-    for(val in 1:len){
-      neighbor[k]<-adjList[open[i]][[1]][val]
-      k<-k+1
-    }
-    cat("Neighbors of  ",open[i],"are ",neighbor,"\n")
-    neighbor<-neighbor[!neighbor %in% open]
-    neighbor<-neighbor[!neighbor %in% closed]
-    open<-open[-1]
-    open<-append(open,neighbor)
-    print(open)
-    
+library(clv)
+m<-2
+data <- read.csv("D:/8th semester/soft computing/lab-2/iris.csv")
+points<-nrow(data)
+dimensions<-ncol(data)-1
+membershipMatrix<-matrix(nrow=points,ncol=dimensions)
+optimalCluster<-function(){
+  dunn1<-vector()
+  db1<-vector()
+  for(i in 2:10){
+    agnesMod<-agnes(data[-ncol(data)])
+    vPred<-as.integer(cutree(agnesMod,i))
+    clsScatter<-cls.scatt.data(data[-ncol(data)],vPred,"euclidean")
+    dunn1<-append(dunn1,clv.Dunn(clsScatter,"centroid","centroid"))
+    db1<-append(db1,clv.Davies.Bouldin(clsScatter,"centroid","centroid"))
   }
-  return(closed)
+  plot(c(2:10),dunn1,xlab="No of clusters",ylab="Dunn Index",type="o",main="Dunn Index Evaluation")
+  plot(c(2:10),db1,xlab="No of clusters",ylab="Db Index",type="o",main="Db Index Evaluation")
+  
 }
-adjList<-list(c('A', 'B'),
-              c('C', 'D'),
-              c('E', 'F'),
-              'A',
-              'A',
-              c('H', 'G'),
-              'B',
-              'E',
-              'E')
-names(adjList)<-c('S',
-                  'A',
-                  'B',
-                  'C',
-                  'D',
-                  'E',
-                  'F',
-                  'H',
-                  'G')
-graph<-stack(adjList)
-#plot(g,directed=FALSE)
-visited<-bfs('S','G')
-print(visited)
-temp<-as.data.frame(graph)
-x<-paste(temp$values,temp$ind,sep=",")
-temp$y = unname(sapply(x, function(x) {
-  paste(sort(str_trim(strsplit(x[1], ',')[[1]])), collapse=',')} ))
-temp<-temp[!duplicated(temp$y), ]
-temp<-temp[,-3]
-temp<-graph.data.frame(temp,directed=FALSE)
-V(temp)$color<-"pink"
-for(i in 1:length(visited)){
-  V(temp)[visited[i]]$color<-"green"
+normalize <- function(x) {
+  return ((x - min(x)) / (max(x) - min(x)))
 }
-V(temp)["S"]$color<-"red"
-V(temp)["G"]$color<-"red"
-plot(temp)
-
-########## DFS #######
-
-library(igraph)
-library(stringr)
-adjList<-list(c('A', 'B'),
-              c('C', 'D'),
-              c('E', 'F'),
-              'A',
-              'A',
-              c('H', 'G'),
-              'B',
-              'E',
-              'E')
-names(adjList)<-c('S',
-                  'A',
-                  'B',
-                  'C',
-                  'D',
-                  'E',
-                  'F',
-                  'H',
-                  'G')
-graph<-stack(adjList)
-#plot(g,directed=FALSE)
-temp<-as.data.frame(graph)
-x<-paste(temp$values,temp$ind,sep=",")
-temp$y = unname(sapply(x, function(x) {
-  paste(sort(str_trim(strsplit(x[1], ',')[[1]])), collapse=',')} ))
-temp<-temp[!duplicated(temp$y), ]
-print(temp)
-temp<-temp[,-3]
-print(temp)
-dfs<-function(start,goal){
-  open<-c()
-  closed<-c()
-  i<-1
-  j<-1
-  open[1]<-start
-  while(!is.null(open[1])){
-    n<-open[1]
-    print(n)
-    if(n==goal){
-      closed[j]<-n
-      open=open[-1]
-      break
+distance<-function(centroids,clusters){
+  distanceMatrix<-matrix(nrow=points,ncol=clusters)
+  for(i in 1:points){
+    for(j in 1:clusters){
+      dist <- sqrt( sum( ( data[i,-ncol(data)] - centroids[j,] )^2 ) )
+      distanceMatrix[i,j]<-dist
     }
-    closed[j]<-open[i]
-    V(temp)[open[i]]$color<-"red"
-    j<-j+1
-    count<-0
-    neighbor=c()
-    k<-1
-    len<-length(adjList[open[i]][[1]])
-    for(val in 1:len){
-      neighbor[k]<-adjList[open[i]][[1]][val]
-      k<-k+1
-    }
-    cat("Neighbors of  ",open[i],"are ",neighbor,"\n")
-    neighbor<-neighbor[!neighbor %in% open]
-    neighbor<-neighbor[!neighbor %in% closed]
-    open<-append(neighbor,open)
-    open<-open[-(length(neighbor)+1)]
-  }
-  return(closed)
+  } 
+  return(distanceMatrix)
 }
-temp<-graph.data.frame(temp,directed=FALSE)
-k1<-dfs('S','G')
-print(k1)
-for(i in 1:length(k1))
-{
-  V(temp)[k1[i]]$color<-"green"
-}
-V(temp)["S"]$color<-"red"
-V(temp)["G"]$color<-"red"
-plot(temp)
-
-############# IDS ########
-
-#install.packages("igraph")
-library("igraph")
-graph_1 <- graph( edges=c('A','S','A','T','A','Z','S','F','S','R','S','O','T','L','Z','O','F','B','R','P','R','C','L','M','B','G','B','U','P','B','C','P','M','D','U','H','D','C','H','E','H','V','V','I','I','N'), directed=F)
-
-
-goal <- V(graph_1)['S']
-start <- V(graph_1)['N']
-get_adj_vertices <- function(graph, node,goal,max_depth,current_depth){
+membership<-function(distanceMatrix,clusters){
   
-  if(goal==node)
-    return(1)
-  
-  if(current_depth==max_depth)
-  {
-    
-    return(0)
-  }
-  
-  adjacent_vertices_list = adjacent_vertices(graph,node)
-  tmp <- get('visited',.GlobalEnv)
-  tmp[[length(visited)+1]] <- node
-  assign("visited",tmp, .GlobalEnv)
-  
-  for(i in seq(1,length(adjacent_vertices_list[[1]]),by=1)){
-    if(goal == adjacent_vertices_list[[1]][i]){
-      return(1)
-    }
-    if(!(adjacent_vertices_list[[1]][i] %in% visited)){
+  membershipMatrix<-matrix(0,nrow=points,ncol=clusters)
+  for(i in 1:nrow(distanceMatrix)){
+    for(j in 1:ncol(distanceMatrix)){
+      up=(1/distanceMatrix[i,j])^(1/(m-1))
+      down=0
+      for(x in 1:ncol(distanceMatrix)){
+        down=down+(1/distanceMatrix[i,x])
+      }
+      down1=down^(1/(m-1))
+      membershipMatrix[i,j]<-up/down1
+      if(is.nan(membershipMatrix[i,j])){
+        membershipMatrix[i,j]=0;
+      }
       
-      goal_reach_flag = get_adj_vertices(graph,adjacent_vertices_list[[1]][i],goal,max_depth,current_depth +1)
-      if(goal_reach_flag == 1)
-      {
-        return(1)
-      }
     }
   }
-  
-  return(0)
+  return(membershipMatrix)
 }
-
-
-
-i=0
-while(length(visited)<=gorder(graph_1)){
-  #for(i in 0:3){
-  visited <- list()
-  goal_flag =get_adj_vertices(graph_1,start,goal,i,0)
-  i=i+1
-  if(goal_flag == 1)
-  {
-    break
+calculateCentroid<-function(membershipMatrix,clusters){
+  centroid<-matrix(nrow=clusters,ncol=dimensions)
+  for(i in 1:nrow(centroid)){
+    for(j in 1:ncol(centroid)){
+      centroid[i,j]<-( sum(data[,j] * membershipMatrix[,i]^m)/sum(membershipMatrix[,i]^m) )
+      centroid[i,j]<-round(centroid[i,j],3)
+    }
   }
-  
-  visited[[length(visited)+1]] <- goal
-  V(graph_1)[unlist(visited)]$color="pink"
-  V(graph_1)[start]$color="green"
-  V(graph_1)[goal]$color="yellow"
-  plot(graph_1)
-  Sys.sleep(2)
+  return(centroid)
 }
-#dfs(graph_1,V(graph_1)['N'])
-
-########### GA #########
-
-rangeL <- 0
-rangeU <- 6
-n = 10
-
-fitness <- function(a,b)
-{
-  f <- (a^2 + b - 11)^2 + (a + b^2 - 7)^2
-  return( 1/(1+f) )
-}
-
-getfitness <- function(i){
-  x = as.list( strsplit(i," "))
-  x1 <- getXi(BinToDec(x[[1]][1]) )
-  x2 <- getXi(BinToDec(x[[1]][2]) )
-  Fx <- fitness(x1,x2)
-  return(Fx)
-}
-
-BinToDec <- function(x) 
-  sum(2^(which(rev(unlist(strsplit(as.character(x), "")) == 1))-1))
-
-getXi <- function(a){
-  result <- rangeL + ( ((rangeU-rangeL)/((2^n)-1)) * a )
-}
-
-findchromo <-function(a,b){
-  result <- c()
-  for(i in b){
-    result <- c(result,which(a>i)[1])
+##for(i in 1:(ncol(data)-1)){
+##  data[,i]=normalize(data[,i])
+##}
+cMeans<-function(clusters){
+  prevCentroids=matrix(nrow=clusters,ncol=dimensions)
+   for(i in 1:nrow(prevCentroids)){
+     for(j in 1:ncol(prevCentroids))
+        prevCentroids[i,j]<-round(runif(1,min(data[,j]),max(data[,j])),4)
   }
-  return (result)
-}
-
-Pc = 0.8
-Pm = 0.05
-
-Selection <- function(population,random_val){
-  sumFx <- 0
-  selection <- data.frame(matrix(ncol = 5, nrow = 0))
-  colnames(selection) <- c("X1","X2","x1","x2","Fx")
-  for(i in population){
-    row <- c()
-    x = as.list( strsplit(i," "))
-    row <- c(row ,x[[1]][1])
-    row <- c(row ,x[[1]][2])
-    x1 <- getXi(BinToDec(x[[1]][1]) )
-    x2 <- getXi(BinToDec(x[[1]][2]) )
-    Fx <- fitness(x1,x2)
-    sumFx <- sumFx + Fx
-    row <- c(row, x1 ,x2 ,Fx)
-    selection <- rbind(selection,t(as.data.frame(row)) )
-  }
-  colnames(selection) <- c("X1","X2","x1","x2","Fx")
-  row.names(selection) <- c(1:nrow(selection))
-  cm <- 0
-  Picol <- c()
-  CPicol <- c()
-  for(i in selection$Fx){
-    cm <- cm + as.numeric(i)/sumFx 
-    Picol <- c(Picol,as.numeric(i)/sumFx)
-    CPicol <- c(CPicol,cm)
-  }
-  rand <- random_val[1:nrow(selection)]
-  strnew <- findchromo(CPicol,rand)
-  selection <- cbind(selection,Picol,CPicol,rand, strnew)
-  return(selection)
-}
-
-CrossOver <-function(pop,random_val){
-  co <- data.frame(matrix(ncol = 0, nrow = length(pop)))
-  co <- cbind(co,pop)
-  co_site = c(9,12,5)
-  randco = c(random_val[7:9])
-  rval <- c()
-  Co_Y_N <- c()
-  Co_s <- c()
-  c_overed <- c()
-  for(p in seq(1,length(pop),2) ){
-    rval <- c(rval,randco[(p+1)/2],randco[(p+1)/2])
-    if(randco[(p+1)/2] < Pc)
-    {
-      Co_Y_N <- c(Co_Y_N, 1,1)
-      c <- co_site[(p+1)/2]
-      val <- NULL
-      val1 <-NULL
-      if(co_site[(p+1)/2] < n){
-        val <- paste( c(substr(pop[p],1,c) , substr(pop[p+1],c+1,21 ) ),collapse = "")
-        val1 <- paste( c(substr(pop[p+1],1,c) , substr(pop[p],c+1,21) ),collapse = "")
-      }
-      else{
-        val <- paste( c(substr(pop[p],1,c+1) , substr(pop[p+1],c+2,21) ),collapse = "")
-        val1 <- paste( c(substr(pop[p+1],1,c+1) , substr(pop[p],c+2,21) ),collapse = "")
-      }
-      c_overed <- c(c_overed,val,val1)
+  centroids=prevCentroids
+  flag<-TRUE
+  while(flag){
+    distanceMatrix<-distance(centroids,clusters)
+    memberShipMatrix<-membership(distanceMatrix,clusters)
+    centroids<-calculateCentroid(memberShipMatrix,clusters)
+    if(identical(prevCentroids,centroids)){
+      flag=FALSE
     }
     else{
-      Co_Y_N <- c(Co_Y_N, 0,0)
-      c_overed <- c(c_overed,pop[p],pop[p+1])
+      prevCentroids=centroids
     }
-    Co_s <- c(Co_s,co_site[(p+1)/2],co_site[(p+1)/2])
+    i=i+1
   }
-  co <- cbind(co,rval,Co_Y_N,Co_s,c_overed)
-  return(co)
-}
-
-Mutation <- function(pop,random_val){
-  mu <- data.frame(matrix(ncol = 0, nrow = length(pop)))
-  mu <- cbind(mu,pop)
-  mu_site = 9
-  randmu = c(random_val[10:length(random_val)])
-  rval <- c()
-  mu_Y_N <- c()
-  mu_s <- rep(mu_site,6)
-  mutated <- c()
-  for(i in 1:length(pop) ){
-    chromosome <- pop[i]
-    newchrom <- as.character(pop[i])
-    if(randmu[i] < Pm){
-      mu_Y_N <- c(mu_Y_N ,1)
-      b <- 0
-      if(mu_s[i] > n){
-        b <- 1
-      }
-      char <- as.character(pop[i])
-      if( substring(char,mu_s[i]+b,mu_s[i]+b ) == "0" ){
-        substring(char,mu_s[i]+b,mu_s[i]+b ) <- "1"
-      }
-      else{
-        substring(char,mu_s[i]+b,mu_s[i]+b ) <- "0"
-      }
-      newchrom<- char
-    }
-    else{
-      mu_Y_N <- c(mu_Y_N ,0)
-    }
-    mutated <- c(mutated,newchrom)
+  print("FINAL CENTROIDS")
+  print(centroids)
+  clusterOutput<-vector()
+  for(i in 1:nrow(memberShipMatrix)){
+    clusterOutput=append(clusterOutput,which.max(memberShipMatrix[i,]))
   }
-  mu <- cbind(mu,mu_Y_N,mu_s,mutated)
-  return(mu)
+  plot(iris[c(1, 2)], col = data[,ncol(data)],main="Original clustered output")
+  plot(iris[c(1, 2)], col = clusterOutput,main="CMeans clustered output")
+  points(centroids[,c(1, 2)], col = 1:length(unique(clusterOutput)), pch = 8, cex = 2)
 }
+par(mfrow=c(2,2))
+optimalCluster()
+cMeans(3)
 
-random_val = c(0.472,0.108,0.723,0.536,0.931,0.972,0.717,0.363,0.817,0.189,0.607,0.192,0.386,0.001,0.413)
-population = c('1100010000 1110010000','0011100111 0001001101','0111001000 1010100001','1000010100 1001000110','1011100011 1100011000', '0011111000 0011100101')
-inpop <- population
-avgf<- c()
 
-for( it in 1:5){
-  selected <- Selection(inpop,random_val)
-  pop <- as.character( inpop[selected$strnew] )
-  cross_overed = CrossOver(pop,random_val)
-  pop <- as.character(cross_overed$c_overed)
-  mutated <- Mutation(pop,random_val)
-  Totalpop = c(inpop,as.vector(as.character(cross_overed$c_overed )),as.vector(as.character(mutated$mutated)) )
-  Totalpop <- unique(Totalpop)
-  newpop <- c()
+Cosine,min:
+
+library(caret)
+data=read.csv("D:/8th semester/soft computing/lab-2/iris.csv")
+#use if needed
+normalize <- function(x,new_min,new_max) {
+  return (((x - min(x)) / (max(x) - min(x)))*(new_max-new_min)+new_min)
+}
+makeSymm <- function(m) {
+  m[lower.tri(m)] <- t(m)[lower.tri(m)]
+  return(m)
+}
+composition <- function(r1,r2) {
+  result = matrix(0,nrow(r1),ncol(r1))
+  for(i in c(1:nrow(r1))) {
+    for(j in c(1:ncol(r1))) {
+      result[i,j] = max(pmin(r1[i,],r2[,j]))
+    }
+  }
+  return(result)
+}
+checkTransitivity<-function(fuzzyMatrix){
+  rows=nrow(fuzzyMatrix)
+  cols=ncol(fuzzyMatrix)
+  for(i in 1:(rows-1)){
+    for(j in (i+1):rows){
+      value1=fuzzyMatrix[i,j]
+      for(x in 1:cols){
+        value2=fuzzyMatrix[j,x]
+        value3=fuzzyMatrix[i,x]
+        if(value3<min(value1,value2)){
+          return(FALSE)
+        }
+      }
+    }
+  }
+  return(TRUE)
   
-  for(i in Totalpop){
-    newpop <- c(newpop,getfitness(i))
-  }
-  
-  fit_table <- data.frame(Totalpop,newpop)
-  fit_table <- fit_table[order(-newpop),]
-  inpop <- as.character( t(fit_table[1:6,1]) )
-  x <- mean(fit_table$newpop)
-  if(length(avgf) > 0 &&  x == avgf[length(avgf)]){
-    #break
-  }
-  
-  avgf <- c(avgf,mean(fit_table$newpop))
-  print(selected)
-  print(cross_overed)
-  print(mutated)
-  #print(fit_table)
-  print(avgf)
 }
-
-############ GA_g #############
-
-fitness<-function(chromosome,range,chromosome_length){
-  value<-strtoi(chromosome,base = 2)
-  value<-range[1]+((range[2]-range[1])/(2**chromosome_length-1))*value
-  return(value**2)
+minMax<-function(){
+  fuzzyMatrix=matrix(1,nrow(data),nrow(data))
+  rows=nrow(fuzzyMatrix)
+  for(i in 1:(rows-1)){
+    for(j in (i+1):rows){
+      up=0
+      down=0
+      for(x in 1:(ncol(data)-1)){
+        up=up+min(data[i,x],data[j,x])
+        down=down+max(data[i,x],data[j,x])
+      }
+      fuzzyMatrix[i,j]<-round(up/down,3)
+      
+    }
+  }
+  return(makeSymm(fuzzyMatrix))
 }
-length_chromosome<-6
-no_of_chromosome<-8
-no_of_variable<-1
-range<-c(0,20)
-#random chromosome generation
-X<-rbinom(no_of_chromosome*length_chromosome,1,0.5)
-X<-as.character(X[1:length_of_random_number])
-length_of_random_number<-no_of_chromosome*length_chromosome #length of x
-chromosomes<-c()
-i<-1
-index<-1
-while(i<no_of_chromosome*length_chromosome){
-  from<-i
-  to<-i+length_chromosome-1
-  chromosomes[index]<-paste(X[from:to],collapse = '')
-  i<-i+length_chromosome
-  index<-index+1
+cosineAmplitude<-function(){
+  fuzzyMatrix=matrix(1,nrow(data),nrow(data))
+  rows=nrow(fuzzyMatrix)
+  for(i in 1:(rows-1)){
+    for(j in (i+1):rows){
+      up=0
+      downFirst=0
+      downSecond=0
+      for(x in 1:(ncol(data)-1)){
+        up=up+(data[i,x]*data[j,x])
+        downFirst=downFirst+(data[i,x]^2)
+        downSecond=downSecond+(data[j,x]^2)
+      }
+      down=sqrt(downFirst*downSecond)
+      fuzzyMatrix[i,j]<-round(up/down,4)
+      
+    }
+  }
+  return(makeSymm(fuzzyMatrix))
 }
-co_prob<-0.65
-mu_prob<-0.05
-no_of_iteration<-5
-chromosome_fitness<-c()
-probability<-c()
-cum_prob<-c()
-selected_chromosomes<-c()
-intermediate_chromosomes<-c()
-final_offsprings<-c()
-mutation_sites<-c(1,4,2,1,3,5,2,4)
-crossover_sites<-c(2,4,1,3)
-for(iteration in 1:no_of_iteration){
-  #fitness
-  for(index in 1:no_of_chromosome){
-    chromosome_fitness[index]<-fitness(chromosomes[index],range,length_chromosome)
-  }
-  #fitness probability
-  sum_fitness<-sum(chromosome_fitness)
-  print("average fitness")
-  print(sum_fitness/no_of_chromosome)
-  for(index in 1:no_of_chromosome){
-    probability[index]<-chromosome_fitness[index]/sum_fitness
-  }
-  #cummulative probability
-  cum_prob[1]<-probability[1]
-  for(index in 2:no_of_chromosome){
-    cum_prob[index]<-probability[index]+cum_prob[index-1]
-  }
-  #selection(Roulette wheel)
-  for(index in 1:no_of_chromosome){
-    random_no<-runif(1)
-    for(cum_index in 1:no_of_chromosome){
-      if(cum_prob[cum_index]>random_no){
-        selected_chromosomes[index]<-chromosomes[cum_index]
-        break
+lambdaCut<-function(fuzzyMatrix,cut){
+  l=matrix(0,nrow(fuzzyMatrix),ncol(fuzzyMatrix))
+  for(i in 1:nrow(fuzzyMatrix)){
+    for(j in 1:ncol(fuzzyMatrix)){
+      if(fuzzyMatrix[i,j]>=cut){
+        l[i,j]=1
       }
     }
   }
-  #cross-over
-  index<-1
-  crossover_site_index<-1
-  while(index<no_of_chromosome){
-    random_no<-runif(1)
-    if(random_no<co_prob){
-      co_site<-crossover_sites[crossover_site_index]
-      c1<-paste(substr(selected_chromosomes[index],1,co_site),
-                substr(selected_chromosomes[index+1],co_site+1,length_chromosome),sep = '')
-      c2<-paste(substr(selected_chromosomes[index+1],1,co_site),
-                substr(selected_chromosomes[index],co_site+1,length_chromosome),sep = '')
-      intermediate_chromosomes[index]<-c1
-      intermediate_chromosomes[index+1]<-c2
-    }else{
-      intermediate_chromosomes[index]<-selected_chromosomes[index]
-      intermediate_chromosomes[index+1]<-selected_chromosomes[index+1]
-    }
-    index<-index+2
-    crossover_site_index<-crossover_site_index+1
-  }
-  #mutation
-  for(index in 1:no_of_chromosome){
-    final_offsprings[index]<-intermediate_chromosomes[index]
-    random_no<-runif(1)
-    if(random_no<mu_prob){
-      mu_site<-mutation_sites[index]
-      mu_value<-substr(final_offsprings[index],mu_site,mu_site)
-      if(mu_value=="1"){
-        substr(final_offsprings[index],mu_site,mu_site)<-"0"
-      }else{
-        substr(final_offsprings[index],mu_site,mu_site)<-"1"
-      }
-    }
-  }
-  print("iteration")
-  print(iteration)
-  print(chromosomes)
-  chromosomes<-final_offsprings
-  print(selected_chromosomes)
-  print(intermediate_chromosomes)
-  print(final_offsprings)
+  return(l)
 }
-for(index in 1:no_of_chromosome){
-  chromosome_fitness[index]<-fitness(chromosomes[index],range,length_chromosome)
+for(i in 1:(ncol(data)-1)){
+  data[,i]=normalize(data[,i],0,1)
 }
-sum<-sum(chromosome_fitness)
-print(sum/no_of_chromosome)
-
-############ GA_2 #########
-
-functionX<-function(x,y){
- res=20+x^2+y^2-10*(cos(2*pi*x)+(cos(2*pi*y)))
-
-  return (round(res,digits=3))
-}
-computeAccuracy<-function(n,l,u){
-  acc<-(u-l)/(2^n)
-  return(round(acc,digits=3))
-}
-generateval<-function(lb,ub,popSize){
-#  xVal=sample(1:((2^nBits)-1),popSize)
-  xVal=runif(popSize,lb,ub)
-  return(xVal)
-}
-computeXOriginalX<-function(xVal,lb,ub,n){
-  original<-(xVal-lb)/((ub-lb)/((2^n)-1))
-
-}
-dectoBin<-function(x,nBits){
-  binary<-paste(as.integer(rev(intToBits(x))), collapse = "")
-  binValue<-substr(binary, nchar(binary)-nBits+1, nchar(binary))
-}
-binToDec<-function(x){
-  sum(2^(which(rev(unlist(strsplit(as.character(x),""))==1))-1))
-}
-computeVal<-function(n,l,u,x){
-  val<-l+(((u-l)/((2^n)-1))*x)
-  return(round(val,digits=3))
-}
-findChromNo<-function(cumList,rNo){
-  for(i in 1:length(cumList)){
-    if(rNo<cumList[i]){
-      return(i)
-    }
-  }
-}
-findTrueCount<-function(index,chromList){
-  count<-0
-  for(i in 1:length(chromList)){
-    if(index==chromList[i]){
-      count<-count+1
-    }
-  }
-  return(count)
-}
-Applicable<-function(rNo,p){
-  if(rNo<=p){
-    return("Y")
+print(data)
+fm=minMax()
+flag=TRUE
+result=fm
+while(flag){
+  tm=checkTransitivity(result)
+  if(tm==TRUE){
+    flag=FALSE
   }
   else{
-    return("N")
+    result=composition(result,fm)
   }
 }
-getIntermediate<-function(p1,p2,site,nBits){
-  p1temp<-gsub("\\s+","",p1)
-  p2temp<-gsub("\\s+","",p2)
-  z1<-paste0(substr(p1temp,1,site),substr(p2temp,site+1,2*nBits))
-  z2<-paste0(substr(p2temp,1,site),substr(p1temp,site+1,2*nBits))
-  z<-paste(z1,z2)
-  return(z)
-}
-getMutated<-function(p,site){
-  ptemp<-gsub("\\s+","",p)
-  if(substr(ptemp, site, site)=='0'){
-    substr(ptemp, site, site) <- '1'
+print(result)
+cutMatrix=lambdaCut(result,0.75)
+groups<-list()
+output<-rep(0,nrow(data))
+print('GROUPS')
+x<-vector()
+labels<-vector()
+for(i in c(1: ncol(cutMatrix))) {
+  position = which(cutMatrix[,i] == 1)
+  if(length(position) > 0){
+    groups[[length(groups)+1]]<-position
+    x=append(x,length(position))
+    label<-length(groups)
+    labels=append(labels,paste("group",label))
   }
-  else{
-    substr(ptemp, site, site) <- '0'
+  for(j in 1:length(position)){
+    output[position[j]]<-label
   }
-  temp<-paste(substr(ptemp,1,nBits),substr(ptemp,nBits+1,2*nBits))
-  return(temp)
-}
-probType<-"min"
-lbX<--5
-ubX<-5
-lbY<--5
-ubY<-5
-popSize<-20
-nBits<-5
-pCo<-0.65
-pMu<-0.1
-s<-1
-stop<-10
-averageFitness<-vector()
-bitList<-vector()
-while(s<=stop){
-  xList<-vector()
-  yList<-vector()
-  xValList<-vector()
-  yValList<-vector()
-  fXlist<-vector()
-  FXlist<-vector()
-  probList<-vector()
-  cumProbList<-vector()
-  rNoList<-vector()
-  chromList<-vector()
-  trueCountList<-vector()
-  if(s==1){
-    xValList=generateval(lbX,ubX,popSize)
-    yValList=generateval(lbY,ubY,popSize)
-  #  xList=generateval(nBits,popSize)
-  #  yList=generateval(nBits,popSize)
-    for(j in 1:length(xValList)){
-      bit=''
-      xList=append(xList,computeXOriginalX(xValList[j],lbX,ubX,nBits))
-      yList=append(yList,computeXOriginalX(yValList[j],lbY,ubY,nBits))
-      bit=paste0(dectoBin(xList[j],nBits)," ",dectoBin(yList[j],nBits))
-      bitList=append(bitList,bit)
-
-    }
-  }
-  else{
-    for(j in 1:length(bitList)){
-      bitTemp=strsplit(bitList[j],' ')
-      xList=append(xList,binToDec(bitTemp[[1]][1]))
-      yList=append(yList,binToDec(bitTemp[[1]][2]))  
-
-      xValList=append(xValList,computeVal(nBits,lbX,ubX,xList[j]))
-      yValList=append(yValList,computeVal(nBits,lbY,ubY,yList[j]))
-      }
-    
-  }
-  for(i in 1:popSize){
-   
-    z<-functionX(xValList[i],yValList[i])
-   
-    fXlist=append(fXlist,z)
-    if(probType=="max"){
-      FXlist=append(FXlist,fXlist[i])
-    }
-    else{
-      if(fXlist[i]==0){
-        val=round((1/(fXlist[i]+1)),3)
-        FXlist=append(FXlist,val)
-      }
-      else{
-        FXlist=append(FXlist,1/fXlist[i])
-      }
-    }
-  }
-  sumFx<-sum(FXlist)
-  cum<-0
-  for(i in 1:length(bitList)){
-    val=round((FXlist[i]/sumFx),3)
-    probList=append(probList,val)
-    cum<-cum+probList[i]
-    cumProbList=append(cumProbList,cum)
-    rNoList=append(rNoList,round(runif(1,0,1),3))
-  }
-  for(i in 1:length(bitList)){
-    chromList=append(chromList,findChromNo(cumProbList,rNoList[i]))
-  }
-  for(i in 1:length(bitList)){
-    trueCountList=append(trueCountList,findTrueCount(i,chromList))
-  }
- cat("ITERATION",s," -SELECTION\n")
-  cat('X',"\t",'Y',"\t",'X-decimal',"\t",'Y-decimal','X-value',"\t",'Y-value',"\t",'f(x)',"\t",'F(X)',"\t",'Pi',"\t",'Cum-Pi',"\t","Random-No","\t","Chromosome","\t",'
-TrueCount',"\n")
-  for(i in 1:length(bitList)){
-    bitTemp<-gsub("\\s+","",bitList[i])
-    xTemp<-substr(bitTemp,1,nBits)
-    yTemp<-substr(bitTemp,nBits+1,2*nBits)
-    cat(xTemp,"\t",yTemp,"\t",xList[i],"\t",yList[i],"\t",xValList[i],"\t",yValList[i],"\t",fXlist[i],"\t",FXlist[i],"\t",probList[i],"\t",cumProbList[i],"\t",rNoList[i],"\t",chromList[i],"\t",trueCountList[i],"\n")
-  }
-  averageFitness=append(averageFitness,sumFx/popSize)
-  newbitList<-vector()
-  rNoList<-vector()
-  crossOverApplicableList<-vector()
-  mutationApplicableList<-vector()
-  mutatedChromosome<-vector()
-  intermediatePopList<-vector()
-  x<-1
-  for(i in 1:length(chromList)){
-    newbitList=append(newbitList,bitList[chromList[i]])
-    rNo=round(runif(1,0,1),3)
-    if(i%%2==0){
-      rNoList=append(rNoList,rNoList[i-1])
-    }
-    else{
-      rNoList=append(rNoList,rNo)
-      x=x+1
-    }
-    crossOverApplicableList=append(crossOverApplicableList,Applicable(rNoList[i],pCo))
-  }
-  x<-1
-  rNo1List<-vector()
-  for(i in seq(1,length(newbitList),2)){
-    if(crossOverApplicableList[i]=='Y' && crossOverApplicableList[i+1]=='Y' ){
-      coSite<-sample(1:(2*nBits-1),1)
-      z<-getIntermediate(newbitList[i],newbitList[i+1],coSite,nBits)
-      zTemp<-strsplit(z," ")
-      x1Temp<-paste(substr(zTemp[[1]][1],1,nBits),substr(zTemp[[1]][1],nBits+1,2*nBits))
-      x2Temp<-paste(substr(zTemp[[1]][2],1,nBits),substr(zTemp[[1]][2],nBits+1,2*nBits))
-      intermediatePopList=append(intermediatePopList,x1Temp)
-      intermediatePopList=append(intermediatePopList,x2Temp)
-      x<-x+1
-    }
-    else{
-      intermediatePopList=append(intermediatePopList,newbitList[i])
-      intermediatePopList=append(intermediatePopList,newbitList[i+1])
-    }
-  }
-  for(i in 1:length(newbitList)){
-    rNo1List=append(rNo1List,round(runif(1,0,1),3))
-    muSite<-sample(1:2*nBits,1)
-    mutationApplicableList=append(mutationApplicableList,Applicable(rNo1List[i],pMu))
-    if(mutationApplicableList[i]=='Y'){
-      mutatedChromosome=append(mutatedChromosome,getMutated(intermediatePopList[i],muSite))
-    }
-    else{
-      mutatedChromosome=append(mutatedChromosome,intermediatePopList[i])
-    }
-  }
-  cat("\nITERATION",s,"-CROSS OVER & MUTATION \n")
-  cat('x',"\t",'y',"\t",'r.no',"\t",'crossOver',"\t",'Intermediate x',"\t",'Intermediate y',"\t",'R.No',"\t",'Mutation',"\t",'Chromosome X',"\t",'Chromosome Y',"\n")
-  for(i in 1:length(newbitList)){
-    bitTemp<-gsub("\\s+","",newbitList[i])
-    xTemp<-substr(bitTemp,1,nBits)
-    yTemp<-substr(bitTemp,nBits+1,2*nBits)
-    intermediatePop<-strsplit(intermediatePopList[i]," ")
-    mutatedTemp<-strsplit(mutatedChromosome[i]," ")
-   cat(xTemp,"\t",yTemp,"\t",rNoList[i],"\t",crossOverApplicableList[i],"\t",intermediatePop[[1]][1],"\t",intermediatePop[[1]][2],"\t",rNo1List[i],"\t",mutationApplicableList[i],"\t",mutatedTemp[[1]][1],"\t",mutatedTemp[[1]][2],"\n")
-  }
-  
-  s=s+1
-  bitList=mutatedChromosome
-}
-print(averageFitness)
-iteration=1:stop
-# Plot the bar chart. 
-plot(iteration,averageFitness)
-
-##############################
-
-
-########## PSO ###########
-
-fun <- function(x){
-  return(1 + 2 * x - x * x)
+  cutMatrix[position,] = 0;
 }
 
-inertia = .9
-coeffLb = 2
-coeffGb = 2
-n = 100
+##for(i in 1:length(groups)){
+  ##x=append(x,length(groups[[i]]))
+  ##labels=append(labels,paste("group",i))
+##}
+print(groups)
 
-randVar1 = runif(n,-5,5)
-randVar2 = runif(n,-5,5)
-
-globalBestFitness = -9999
-currentPosition = runif(n,-5,5)
-velocity = runif(n,-.5,.5)
-
-iter = 200
-
-currentFitness = fun(currentPosition)
-localBestPosition = currentPosition
-localBestFitness = currentFitness
-
-for (inertia in seq(.9,.4,-(.9-.4)/iter)) {
-  max = max(currentFitness)
-  ind = which(currentFitness == max)[1]
-  
-  if(max > globalBestFitness){
-    globalBestFitness = max
-    gbp = currentPosition[ind]
-  }
-  
-  velocity = inertia * velocity + randVar1 * coeffLb * (currentPosition - localBestPosition) + randVar2 * coeffGb * (currentPosition - gbp)
-  currentPosition = currentPosition + velocity 
-  
-  currentFitness = fun(currentPosition)
-  i = 1
-  for (f in currentFitness) {
-    
-    if(f > localBestFitness[i]){
-      localBestFitness[i] = f
-      localBestPosition[i] = currentPosition[i]
-    }
-    i = i + 1
-    
-  }
+expectedOutput<-as.numeric(data[,ncol(data)])
+y1<-factor(output)
+y2<-factor(expectedOutput)
+levels(y2)<-c(1:length(groups))
+levels(y1)<-c(1:length(groups))
+print("Confusion Matrix")
+cm=confusionMatrix(y2,y1)
+print(cm)
+cat("Accuracy",cm$overall["Accuracy"],"\n")
+if(is.na(cm$byClass['Pos Pred Value'])){
+  cat("Precision",0,"\n" )
+}else{
+  cat("Precision",cm$byClass['Pos Pred Value'],"\n" )
 }
-print(globalBestFitness)
-
-########### PSO_g ##########
-
-fitness<-function(operands){
-  particle_fitness<-1/(1+abs(50-sum(operands)))
-  return(particle_fitness)
+if(is.na(cm$byClass['Sensitivity'])){
+  cat("Recall",0,"\n")
+}else{
+  cat("Recall",cm$byClass['Sensitivity'],"\n")
 }
-
-particles<-list()
-no_of_particles<-20
-for(index in 1:no_of_particles){
-  particles[[index]]<-runif(10,min = -500,max = 500)
+if(is.na(cm$byClass['Pos Pred Value'])||is.na(cm$byClass['Sensitivity'])){
+  cat("F Measure",0,"\n")
+}else{
+  Precision=cm$byClass['Pos Pred Value']
+  Recall=cm$byClass['Sensitivity']
+  Fmeasure=(2 * Precision * Recall) / (Precision + Recall)
+  cat("F Measure",Fmeasure,"\n")
 }
-velocity<-list()
-for(index in 1:no_of_particles){
-  random_velocity<-runif(1,min = -1,max = 1)
-  velocity[[index]]<-rep(random_velocity,10)
-}
-
-
-no_of_iteration<-4
-
-w<-0.70
-c1<-0.20
-c2<-0.60
-particle_best<-list()
-particle_best_fitness<-c()
-particle_best<-particles
-particles_Sum<-c()
 par(mfrow=c(1,2))
-for(index in 1:no_of_particles){
-  particles_Sum[index]<-sum(particles[[index]])
+pie(x,labels,main="Count of records in each Class",col=rainbow(length(x)))
+plot(data[,1],data[,2],xlab="Sepal Length",ylab="Sepal Width",col=output,main="Sepal Length vs SepalWidth",pch=2)
+legend("topright",
+       legend = labels, col=1:length(labels),pch=2,inset=c(0,0))
+
+
+mamdani:
+
+library(frbs)
+library(caret)
+#use if needed
+normalize <- function(x,new_min,new_max) {
+  return (((x - min(x)) / (max(x) - min(x)))*(new_max-new_min)+new_min)
 }
+varinp.mf <- matrix(c(1, 0, 0, 30, NA, 1, 30, 45, 60, NA, 1, 60, 100, 100,NA,
+                      1, 0, 0, 30, NA, 1, 30, 45, 60, NA, 1, 60, 100, 100,NA),                  
+                    nrow = 5, byrow = FALSE)
 
-plot(particles_Sum,type="p")
-
-for(iteration in 1:no_of_iteration){
-  particle_fitness<-c()
-  for(index in 1:no_of_particles){
-    particle_fitness[index]<-fitness(particles[[index]])
-    if(iteration == 1){
-      particle_best[[index]]<-particles[[index]]
-      particle_best_fitness[index]<-particle_fitness[index]
-      next
-    }
-    if(particle_fitness[index]>particle_best_fitness[index]){
-      particle_best[[index]]<-particles[[index]]
-      particle_best_fitness[index]<-particle_fitness[index]
-    }
-    
-  }
-  gbest_position<-which.max(particle_fitness)
-  new_velocity<-list()
-  for(index in 1:no_of_particles){
-    r1<-runif(1)
-    r2<-runif(1)
-    velocity[[index]]<-velocity[[index]]*w+c1*r1*(particle_best[[index]]-particles[[index]])+c2*r2*(particles[[gbest_position]]-particles[[index]])
-    particles[[index]]<-particles[[index]]+velocity[[index]]
-  }
-}
-for(index in 1:no_of_particles){
-  particles_Sum[index]<-sum(particles[[index]])
-}
-
-plot(particles_Sum,type="p")
-
-############ Greedy_Best #####
-
-library(igraph)
-#node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-#names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
-
-#graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-#E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-node_heuristic<-c(223,222,166,192,165,136,122,111,100,60,32,102,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M')
-
-graph_1<-graph(edges = c('A','B','A','C','B','D','C','D','C','F','C','L','D','E','F','J','F','K','L','M','E','G','J','I','J','K','K','M','G','H','I','H'),directed = F)
-
-start_node<-'A'
-goal<-'M'
-
-V(graph_1)$color<-"white"
-E(graph_1)$color<-"black"
-
-open<-c()
-open[start_node]<-node_heuristic[start_node]
-closed<-c()
-path<-c()
-flag<-FALSE
-while(TRUE){
-  if(length(open)==0){
-    break
-  }
-  n<-names(open)[1]
-  if(n==goal){
-    path<-c(path,n)
-    flag<-TRUE
-    break
-  }
-  closed<-c(closed,open[1])
-  open<-open[-1]
-  adj<-adjacent_vertices(graph_1,n)
-  for(i in 1:length(adj[[1]])){
-    if(adj[[1]][i]$name %in% names(open) || adj[[1]][i]$name %in% names(closed)){
-      next
-    }
-    open[adj[[1]][i]$name]<-node_heuristic[adj[[1]][i]$name]
-  }
-  ordered_open<-order(as.numeric(open))
-  open<-open[ordered_open]
-  print(closed)
-  path<-c(path,n)
-}
-
-plot(graph_1)
-
-
-if(flag){
-  print(path)
-}else{
-  print("path not found")
-}
-
-########### Hill ######### 
-
-library(igraph)
-node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
-
-graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-start_node<-'A'
-goal<-'R'
-path<-c(start_node)
-n<-start_node
-flag<-FALSE
-while(TRUE){
-  if(n==goal){
-    flag<-TRUE
-    break
-  }
-  adj<-adjacent_vertices(graph_1,n)
-  min_cost_child<-adj[[1]][1]$name
-  for(i in 2:length(adj[[1]])){
-    if(node_heuristic[min_cost_child]>node_heuristic[adj[[1]][i]$name]){
-      min_cost_child<-adj[[1]][i]$name
-    }
-  }
-  if(node_heuristic[n]<node_heuristic[min_cost_child]){
-    flag<-FALSE
-    break
-  }
-  n<-min_cost_child
-  path<-c(path,n)
-}
-if(flag){
-  print(path)
-} else{
-  print("stopped at local maxima")
-  print(path)
-}
-
-ordered_list<-order(as.numeric(node_heuristic))
-node_heuristic<-node_heuristic[ordered_list]
-print(node_heuristic)
-typeof(node_heuristic)
-
-#print(node_heuristic)
-#node_heuristic<-node_heuristic[names(node_heuristic)!='A']
-#print(node_heuristic)
-
-
-########## A Algo ###########
-
-library(igraph)
-# node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-# names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
-# 
-# graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-# E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-node_heuristic<-c(223,222,166,192,165,136,122,111,100,60,32,102,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M')
-
-graph_1<-graph(edges = c('A','B','A','C','B','D','C','D','C','F','C','L','D','E','F','J','F','K','L','M','E','G','J','I','J','K','K','M','G','H','I','H'), directed = F)
-E(graph_1)$weight<-c(36,61,31,32,31,80,52,122,112,102,43,45,36,32,30,40)
-
-start_node<-'A'
-goal<-'M'
-
-plot(graph_1)
-
-V(graph_1)$color<-"white"
-E(graph_1)$color<-"black"
-
-open<-c()
-open[start_node]<-node_heuristic[start_node]
-closed<-c()
-path<-c()
-cost<-c()
-link<-c()
-cost[start_node]<-0
-print(cost[start_node])
-flag<-FALSE
-while(TRUE){
-  if(length(open)==0){
-    break
-  }
-  n<-names(open)[1]
-  if(n==goal){
-    path<-c(path,n)
-    flag<-TRUE
-    break
-  }
-  closed<-c(closed,open[1])
-  open<-open[-1]
-  adj<-adjacent_vertices(graph_1,n)
-  for(i in 1:length(adj[[1]])){
-    ei<-get.edge.ids(graph_1,c(n,adj[[1]][i]$name))
-    cost_of_edge<-E(graph_1)[ei]$weight
-    cost_of_node<-cost[n]+cost_of_edge
-    total_node_heuristic<-node_heuristic[adj[[1]][i]$name]+cost_of_node
-    if(adj[[1]][i]$name %in% names(open)){
-      if(open[adj[[1]][i]$name]>total_node_heuristic){
-        open[adj[[1]][i]$name]<-total_node_heuristic
-        cost[adj[[1]][i]$name]<-cost_of_node
-        link[adj[[1]][i]$name]<-n
+num.fvalinput <- matrix(c(3, 3), nrow=1)
+varinput.1 <- c("small", "medium_dirtiness", "large")
+varinput.2 <- c("not_greasy", "medium_type","greasy")
+names.varinput <- c(varinput.1, varinput.2)
+range.data <- matrix(c(0,100, 0, 100,0,100), nrow=2)
+type.defuz <- "COG"
+type.tnorm <- "MIN"
+type.snorm <- "MAX"
+type.implication.func <- "ZADEH"
+name <- "Sim-0"
+#newdata<- matrix(c(30, 75,  45, 80, 30, 45), nrow= 3, byrow = TRUE)
+newdata<-read.csv("D:/8th semester/soft computing/lab-2/dirt.csv")
+colnames.var <- c("dirtiness", "type of dirt", "washing time")
+num.fvaloutput <- matrix(c(5), nrow=1)
+varoutput.1 <- c("very_short", "short", "medium","long","very_long")
+names.varoutput <- c(varoutput.1)
+varout.mf <- matrix(c(1, 0, 10, 20,NA ,
+                      1, 20, 30, 40, NA,
+                      1, 40, 50, 60, NA,
+                      1,60,70,80,NA,
+                      1,80,90,100,NA),
+                    nrow = 5, byrow = FALSE)
+type.model <- "MAMDANI"
+rule <- matrix(c("large","and","greasy","->","very_long",
+                 "medium_dirtiness","and","greasy","->","long",
+                 "small","and","greasy","->","long",
+                 "large","and","medium_type","->","long",
+                 "medium_dirtiness","and","medium_type","->","medium",
+                 "small","and","medium_type","->","medium",
+                 "large","and","not_greasy","->","medium",
+                 "medium_dirtiness","and","not_greasy","->","short",
+                 "small","and","not_greasy","->","very_short"), 
+               nrow=9, byrow=TRUE) 
+object <- frbs.gen(range.data, num.fvalinput, names.varinput, num.fvaloutput, varout.mf, 
+                   names.varoutput, rule, varinp.mf, type.model, type.defuz, type.tnorm, 
+                   type.snorm, func.tsk = NULL, colnames.var, type.implication.func, name)
+par(mar=c(1,1,1,1))
+summary(object)
+plotMF(object)
+#for(i in 1:(ncol(data)-1)){
+# data[,i]=normalize(data[,i],0,1)
+#}
+res <- predict(object, newdata[,-ncol(newdata)])$predicted.val
+print("Defuzzified values")
+print(res)
+label<-vector()
+labelEncoding<-vector()
+for(i in 1:length(res)){
+  for(j in 1:ncol(varout.mf)){
+      lowerbound=varout.mf[2,j]
+      upperbound=varout.mf[4,j]
+      if(res[i]<=upperbound && res[i]>lowerbound ){
+        label=append(label,varoutput.1[j])
+        labelEncoding=append(labelEncoding,j)
       }
-      next
-    }
-    if(adj[[1]][i]$name %in% names(closed)){
-      if(closed[adj[[1]][i]$name]>total_node_heuristic){
-        open[adj[[1]][i]$name]<-total_node_heuristic
-        cost[adj[[1]][i]$name]<-cost_of_node
-        link[adj[[1]][i]$name]<-n
-      }
-      next
-    }
-    open[adj[[1]][i]$name]<-node_heuristic[adj[[1]][i]$name]+cost_of_node
-    cost[adj[[1]][i]$name]<-cost_of_node
-    link[adj[[1]][i]$name]<-n
   }
-  ordered_open<-order(as.numeric(open))
-  open<-open[ordered_open]
-  print(open)
-  path<-c(path,n)
 }
-for(i in 2:length(path)){
-  ei <- get.edge.ids(graph_1, c(path[i],link[path[i]]))
-  E(graph_1)[ei]$color<-'orange'
-}
-plot(graph_1)
-print(cost[goal])
-if(flag){
-  print(path)
+print("Associated Classes")
+print(label)
+output<-factor(label)
+expectedOutput<-factor(newdata[,ncol(newdata)])
+levels(expectedOutput)<-varoutput.1
+levels(output)<-varoutput.1
+cm=confusionMatrix(expectedOutput,output)
+print(cm)
+cat("Accuracy",cm$overall["Accuracy"],"\n")
+if(is.na(cm$byClass['Pos Pred Value'])){
+  cat("Precision",0,"\n" )
 }else{
-  print("path not found")
+  cat("Precision",cm$byClass['Pos Pred Value'],"\n" )
 }
+if(is.na(cm$byClass['Sensitivity'])){
+  cat("Recall",0,"\n")
+}else{
+  cat("Recall",cm$byClass['Sensitivity'],"\n")
+}
+if(is.na(cm$byClass['Pos Pred Value'])||is.na(cm$byClass['Sensitivity'])){
+  cat("F Measure",0,"\n")
+}else{
+ 
+    Precision=cm$byClass['Pos Pred Value']
+    Recall=cm$byClass['Sensitivity']
+    Fmeasure=(2 * Precision * Recall) / (Precision + Recall)
+    cat("F Measure",Fmeasure,"\n")
+  
+}
+Sys.sleep(10)
+par(mfrow=c(1,1))
+plot(newdata[,1],newdata[,2],xlab="dirtiness",ylab="Type of dirt",col=labelEncoding,main="Dirtiness vs DirtType",pch=2)
+legend("topright",
+      legend = varoutput.1, col=1:length(varoutput.1),pch=2,inset=c(0,0.35))
 
-#####################
+
+
+
+tsk:
+
+library(frbs)
+#use if needed
+library(caret)
+normalize <- function(x,new_min,new_max) {
+  return (((x - min(x)) / (max(x) - min(x)))*(new_max-new_min)+new_min)
+}
+varinp.mf <- matrix(c(1, 1000, 1200, 1400, NA, 1, 1400, 1600, 1800, NA,
+                      1, 2.5, 5, 7.5, NA, 1, 7.5, 10, 14, NA),                  
+                    nrow = 5, byrow = FALSE)
+
+num.fvalinput <- matrix(c(2, 2), nrow=1)
+varinput.1 <- c("smallW", "largeW")
+varinput.2 <- c("smallT", "largeT")
+names.varinput <- c(varinput.1, varinput.2)
+range.data <- matrix(c(1000,2000, 0, 15,1000,15000), nrow=2)
+type.defuz <- "WAM"
+type.tnorm <- "MIN"
+type.snorm <- "MAX"
+type.implication.func <- "ZADEH"
+name <- "Sim-0"
+newdata<- read.csv("tsk.csv")
+colnames.var <- c("W", "T","AU")
+type.model <- "TSK"
+num.fvaloutput <- matrix(c(2), nrow=1)
+varoutput.1 <- c("small","large")
+names.varoutput <- c(varoutput.1)
+varout.mf <- matrix(c(1, 2000, 6000, 10000,NA ,
+                      1, 10000, 12500, 15000, NA
+                     ),
+                    nrow = 5, byrow = FALSE)
+func.tsk <- matrix(c(4.6925, -526.2, 2631, 3.4765, -210.5, 2103, 4.6925, -526.2, 2631),
+                   nrow = 3, byrow = TRUE)
+rule <- matrix(c("largeW", "and", "smallT", "->",
+                 "smallW", "or", "largeT", "->",
+                 "smallW", "and", "smallT", "->"),
+               nrow = 3, byrow = TRUE)
+object <- frbs.gen(range.data, num.fvalinput, names.varinput,
+                   num.fvaloutput = NULL, varout.mf = NULL, names.varoutput = NULL, rule,
+                   varinp.mf, type.model, type.defuz = NULL, type.tnorm, type.snorm,
+                   func.tsk, colnames.var, type.implication.func, name)
+par(mfrow=c(2,2))
+plotMF(object)
+#for(i in 1:(ncol(data)-1)){
+ # data[,i]=normalize(data[,i],0,1)
+#}
+res <- predict(object, newdata[,-ncol(newdata)])$predicted.val
+
+label<-vector()
+labelEncoding<-vector()
+for(i in 1:length(res)){
+  for(j in 1:ncol(varout.mf)){
+    lowerbound=varout.mf[2,j]
+    upperbound=varout.mf[4,j]
+    if(res[i]<=upperbound && res[i]>lowerbound ){
+      label=append(label,varoutput.1[j])
+      labelEncoding=append(labelEncoding,j)
+    }
+  }
+}
+print("Defuzzified values ")
+print(res)
+print("Associated Class")
+print(label)
+output<-factor(label)
+expectedOutput<-factor(newdata[,ncol(newdata)])
+levels(expectedOutput)<-varoutput.1
+levels(output)<-varoutput.1
+cm=confusionMatrix(expectedOutput,output)
+print("Confusion Matrix")
+print(cm)
+cat("Accuracy",cm$overall["Accuracy"],"\n")
+if(is.na(cm$byClass['Pos Pred Value'])){
+  cat("Precision",0,"\n" )
+}else{
+  cat("Precision",cm$byClass['Pos Pred Value'],"\n" )
+}
+if(is.na(cm$byClass['Sensitivity'])){
+  cat("Recall",0,"\n")
+}else{
+  cat("Recall",cm$byClass['Sensitivity'],"\n")
+}
+if(is.na(cm$byClass['Pos Pred Value'])||is.na(cm$byClass['Sensitivity'])){
+  cat("F Measure",0,"\n")
+}else{
+  Precision=cm$byClass['Pos Pred Value']
+  Recall=cm$byClass['Sensitivity']
+  Fmeasure=(2 * Precision * Recall) / (Precision + Recall)
+  cat("F Measure",Fmeasure,"\n")
+}
+Sys.sleep(10)
+plot(newdata[,1],newdata[,2],xlab="W",ylab="T",col=labelEncoding,main="W vs T",pch=1)
+legend("bottomright",
+       legend = varoutput.1, col=1:length(varoutput.1),pch=1,inset=c(0,0))
+
+
+
+
 
