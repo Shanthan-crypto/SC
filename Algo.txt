@@ -1,639 +1,693 @@
-##### BFS ######
+## Cos-mat
 
-library(igraph)
-library(stringr)
-bfs<-function(start,goal){
-  open<-c()
-  closed<-c()
-  i<-1
-  j<-1
-  open[1]<-start
-  while(!is.null(open[1])){
-    n<-open[1]
-    print(n)
-    if(n==goal){
-      closed[j]<-n
-      open=open[-1]
-      print(open)
-      break
-    }
-    closed[j]<-open[i]
-    j<-j+1
-    neighbor=c()
-    k<-1
-    len<-length(adjList[open[i]][[1]])
-    for(val in 1:len){
-      neighbor[k]<-adjList[open[i]][[1]][val]
-      k<-k+1
-    }
-    cat("Neighbors of  ",open[i],"are ",neighbor,"\n")
-    neighbor<-neighbor[!neighbor %in% open]
-    neighbor<-neighbor[!neighbor %in% closed]
-    open<-open[-1]
-    open<-append(open,neighbor)
-    print(open)
-    
-  }
-  return(closed)
-}
-adjList<-list(c('A', 'B'),
-              c('C', 'D'),
-              c('E', 'F'),
-              'A',
-              'A',
-              c('H', 'G'),
-              'B',
-              'E',
-              'E')
-names(adjList)<-c('S',
-                  'A',
-                  'B',
-                  'C',
-                  'D',
-                  'E',
-                  'F',
-                  'H',
-                  'G')
-graph<-stack(adjList)
-#plot(g,directed=FALSE)
-visited<-bfs('S','G')
-print(visited)
-temp<-as.data.frame(graph)
-x<-paste(temp$values,temp$ind,sep=",")
-temp$y = unname(sapply(x, function(x) {
-  paste(sort(str_trim(strsplit(x[1], ',')[[1]])), collapse=',')} ))
-temp<-temp[!duplicated(temp$y), ]
-temp<-temp[,-3]
-temp<-graph.data.frame(temp,directed=FALSE)
-V(temp)$color<-"pink"
-for(i in 1:length(visited)){
-  V(temp)[visited[i]]$color<-"green"
-}
-V(temp)["S"]$color<-"red"
-V(temp)["G"]$color<-"red"
-plot(temp)
-
-########## DFS #######
-
-library(igraph)
-library(stringr)
-adjList<-list(c('A', 'B'),
-              c('C', 'D'),
-              c('E', 'F'),
-              'A',
-              'A',
-              c('H', 'G'),
-              'B',
-              'E',
-              'E')
-names(adjList)<-c('S',
-                  'A',
-                  'B',
-                  'C',
-                  'D',
-                  'E',
-                  'F',
-                  'H',
-                  'G')
-graph<-stack(adjList)
-#plot(g,directed=FALSE)
-temp<-as.data.frame(graph)
-x<-paste(temp$values,temp$ind,sep=",")
-temp$y = unname(sapply(x, function(x) {
-  paste(sort(str_trim(strsplit(x[1], ',')[[1]])), collapse=',')} ))
-temp<-temp[!duplicated(temp$y), ]
-print(temp)
-temp<-temp[,-3]
-print(temp)
-dfs<-function(start,goal){
-  open<-c()
-  closed<-c()
-  i<-1
-  j<-1
-  open[1]<-start
-  while(!is.null(open[1])){
-    n<-open[1]
-    print(n)
-    if(n==goal){
-      closed[j]<-n
-      open=open[-1]
-      break
-    }
-    closed[j]<-open[i]
-    V(temp)[open[i]]$color<-"red"
-    j<-j+1
-    count<-0
-    neighbor=c()
-    k<-1
-    len<-length(adjList[open[i]][[1]])
-    for(val in 1:len){
-      neighbor[k]<-adjList[open[i]][[1]][val]
-      k<-k+1
-    }
-    cat("Neighbors of  ",open[i],"are ",neighbor,"\n")
-    neighbor<-neighbor[!neighbor %in% open]
-    neighbor<-neighbor[!neighbor %in% closed]
-    open<-append(neighbor,open)
-    open<-open[-(length(neighbor)+1)]
-  }
-  return(closed)
-}
-temp<-graph.data.frame(temp,directed=FALSE)
-k1<-dfs('S','G')
-print(k1)
-for(i in 1:length(k1))
-{
-  V(temp)[k1[i]]$color<-"green"
-}
-V(temp)["S"]$color<-"red"
-V(temp)["G"]$color<-"red"
-plot(temp)
-
-############# IDS ########
-
-#install.packages("igraph")
-library("igraph")
-graph_1 <- graph( edges=c('A','S','A','T','A','Z','S','F','S','R','S','O','T','L','Z','O','F','B','R','P','R','C','L','M','B','G','B','U','P','B','C','P','M','D','U','H','D','C','H','E','H','V','V','I','I','N'), directed=F)
-
-
-goal <- V(graph_1)['S']
-start <- V(graph_1)['N']
-get_adj_vertices <- function(graph, node,goal,max_depth,current_depth){
-  
-  if(goal==node)
-    return(1)
-  
-  if(current_depth==max_depth)
-  {
-    
-    return(0)
-  }
-  
-  adjacent_vertices_list = adjacent_vertices(graph,node)
-  tmp <- get('visited',.GlobalEnv)
-  tmp[[length(visited)+1]] <- node
-  assign("visited",tmp, .GlobalEnv)
-  
-  for(i in seq(1,length(adjacent_vertices_list[[1]]),by=1)){
-    if(goal == adjacent_vertices_list[[1]][i]){
-      return(1)
-    }
-    if(!(adjacent_vertices_list[[1]][i] %in% visited)){
+cosine_amplitude <- function(mat){
+  mat_2 = matrix(rep(1,dim(mat)[1]^2),nrow = dim(mat)[1])
+  for(i in 1:(dim(mat)[1]-1)){
+    mat_2[i,i] = 1
+    for(j in c((i+1):dim(mat)[1])){
       
-      goal_reach_flag = get_adj_vertices(graph,adjacent_vertices_list[[1]][i],goal,max_depth,current_depth +1)
-      if(goal_reach_flag == 1)
+      mat_2[i,j] = sum(mat[i,]*mat[j,])/sqrt(sum(mat[i,]^2)*sum(mat[j,]^2))
+      mat_2[j,i] = mat_2[i,j]
+    }
+  }
+  mat_2[dim(mat)[1],dim(mat)[1]] = 1
+  return(mat_2)
+}
+
+is_reflexive <- function(mat){
+  for(i in 1:dim(mat)[1]){
+    if(mat[i,i] != 1)
+      return(FALSE)
+  }
+  return(TRUE)
+}
+
+is_symmetric <- function(mat){
+  for(i in 1:(dim(mat)[1]-1)){
+    for(j in c((i+1):dim(mat)[1])){
+      if(mat[i,j] != mat[j,i])
+        return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+
+is_transitive <- function(mat){
+  for(i in 1:((dim(mat)[1]))){
+    for(j in 1:((dim(mat)[1]))){
+      for(k in 1:((dim(mat)[1]))){
+        if(mat[i,k] < min(mat[i,j],mat[j,k]))
+          return(FALSE)
+      }
+    }
+  }
+  return(TRUE)
+}
+
+
+max_min_composition <- function(mat){
+  mat_2 = matrix(rep(0,dim(mat)[1]^2),nrow=dim(mat)[1])
+  for(i in seq(1,dim(mat)[1])){
+    for(j in seq(1,dim(mat)[1])){
+      min_vector =c()
+      for(k in seq(1,dim(mat)[1])){
+        min_vector[k] = min(mat[i,k],mat[k,j])
+      }
+      mat_2[i,j] = max(min_vector)
+    }
+  }
+  return(mat_2)
+}
+
+
+
+lambda_cut <- function(mat,lambda){
+  mat[mat>=lambda] = 1
+  mat[mat != 1] = 0
+  return(mat)
+}
+
+
+get_equivalence_classes <- function(mat){
+  classes = list()
+  r = seq(1,dim(mat)[1])
+  #names(r) = r
+  
+  
+  while(length(r)!=0){
+    class1 = c()
+    for(j in seq(1,length(r))){
+      f=0
+      for(k in seq(1,dim(mat)[1]))
       {
-        return(1)
+        if(mat[r[1],k]!=mat[r[j],k]){
+          f=1
+          break
+        }
       }
-    }
-  }
-  
-  return(0)
-}
-
-
-
-i=0
-while(length(visited)<=gorder(graph_1)){
-  #for(i in 0:3){
-  visited <- list()
-  goal_flag =get_adj_vertices(graph_1,start,goal,i,0)
-  i=i+1
-  if(goal_flag == 1)
-  {
-    break
-  }
-  
-  visited[[length(visited)+1]] <- goal
-  V(graph_1)[unlist(visited)]$color="pink"
-  V(graph_1)[start]$color="green"
-  V(graph_1)[goal]$color="yellow"
-  plot(graph_1)
-  Sys.sleep(2)
-}
-#dfs(graph_1,V(graph_1)['N'])
-
-
-############ GA #############
-
-fitness<-function(chromosome,range,chromosome_length){
-  value<-strtoi(chromosome,base = 2)
-  value<-range[1]+((range[2]-range[1])/(2**chromosome_length-1))*value
-  return(value**2)
-}
-length_chromosome<-6
-no_of_chromosome<-8
-no_of_variable<-1
-range<-c(0,20)
-#random chromosome generation
-X<-rbinom(no_of_chromosome*length_chromosome,1,0.5)
-X<-as.character(X[1:length_of_random_number])
-length_of_random_number<-no_of_chromosome*length_chromosome #length of x
-chromosomes<-c()
-i<-1
-index<-1
-while(i<no_of_chromosome*length_chromosome){
-  from<-i
-  to<-i+length_chromosome-1
-  chromosomes[index]<-paste(X[from:to],collapse = '')
-  i<-i+length_chromosome
-  index<-index+1
-}
-co_prob<-0.65
-mu_prob<-0.05
-no_of_iteration<-5
-chromosome_fitness<-c()
-probability<-c()
-cum_prob<-c()
-selected_chromosomes<-c()
-intermediate_chromosomes<-c()
-final_offsprings<-c()
-mutation_sites<-c(1,4,2,1,3,5,2,4)
-crossover_sites<-c(2,4,1,3)
-for(iteration in 1:no_of_iteration){
-  #fitness
-  for(index in 1:no_of_chromosome){
-    chromosome_fitness[index]<-fitness(chromosomes[index],range,length_chromosome)
-  }
-  #fitness probability
-  sum_fitness<-sum(chromosome_fitness)
-  print("average fitness")
-  print(sum_fitness/no_of_chromosome)
-  for(index in 1:no_of_chromosome){
-    probability[index]<-chromosome_fitness[index]/sum_fitness
-  }
-  #cummulative probability
-  cum_prob[1]<-probability[1]
-  for(index in 2:no_of_chromosome){
-    cum_prob[index]<-probability[index]+cum_prob[index-1]
-  }
-  #selection(Roulette wheel)
-  for(index in 1:no_of_chromosome){
-    random_no<-runif(1)
-    for(cum_index in 1:no_of_chromosome){
-      if(cum_prob[cum_index]>random_no){
-        selected_chromosomes[index]<-chromosomes[cum_index]
-        break
+      if(f == 0){
+        class1[length(class1)+1] = r[j]
       }
-    }
-  }
-  #cross-over
-  index<-1
-  crossover_site_index<-1
-  while(index<no_of_chromosome){
-    random_no<-runif(1)
-    if(random_no<co_prob){
-      co_site<-crossover_sites[crossover_site_index]
-      c1<-paste(substr(selected_chromosomes[index],1,co_site),
-                substr(selected_chromosomes[index+1],co_site+1,length_chromosome),sep = '')
-      c2<-paste(substr(selected_chromosomes[index+1],1,co_site),
-                substr(selected_chromosomes[index],co_site+1,length_chromosome),sep = '')
-      intermediate_chromosomes[index]<-c1
-      intermediate_chromosomes[index+1]<-c2
-    }else{
-      intermediate_chromosomes[index]<-selected_chromosomes[index]
-      intermediate_chromosomes[index+1]<-selected_chromosomes[index+1]
-    }
-    index<-index+2
-    crossover_site_index<-crossover_site_index+1
-  }
-  #mutation
-  for(index in 1:no_of_chromosome){
-    final_offsprings[index]<-intermediate_chromosomes[index]
-    random_no<-runif(1)
-    if(random_no<mu_prob){
-      mu_site<-mutation_sites[index]
-      mu_value<-substr(final_offsprings[index],mu_site,mu_site)
-      if(mu_value=="1"){
-        substr(final_offsprings[index],mu_site,mu_site)<-"0"
-      }else{
-        substr(final_offsprings[index],mu_site,mu_site)<-"1"
-      }
-    }
-  }
-  print("iteration")
-  print(iteration)
-  print(chromosomes)
-  chromosomes<-final_offsprings
-  print(selected_chromosomes)
-  print(intermediate_chromosomes)
-  print(final_offsprings)
-}
-for(index in 1:no_of_chromosome){
-  chromosome_fitness[index]<-fitness(chromosomes[index],range,length_chromosome)
-}
-sum<-sum(chromosome_fitness)
-print(sum/no_of_chromosome)
-
-########## PSO ###########
-
-fun <- function(x){
-  return(1 + 2 * x - x * x)
-}
-
-inertia = .9
-coeffLb = 2
-coeffGb = 2
-n = 100
-
-randVar1 = runif(n,-5,5)
-randVar2 = runif(n,-5,5)
-
-globalBestFitness = -9999
-currentPosition = runif(n,-5,5)
-velocity = runif(n,-.5,.5)
-
-iter = 200
-
-currentFitness = fun(currentPosition)
-localBestPosition = currentPosition
-localBestFitness = currentFitness
-
-for (inertia in seq(.9,.4,-(.9-.4)/iter)) {
-  max = max(currentFitness)
-  ind = which(currentFitness == max)[1]
-  
-  if(max > globalBestFitness){
-    globalBestFitness = max
-    gbp = currentPosition[ind]
-  }
-  
-  velocity = inertia * velocity + randVar1 * coeffLb * (currentPosition - localBestPosition) + randVar2 * coeffGb * (currentPosition - gbp)
-  currentPosition = currentPosition + velocity 
-  
-  currentFitness = fun(currentPosition)
-  i = 1
-  for (f in currentFitness) {
-    
-    if(f > localBestFitness[i]){
-      localBestFitness[i] = f
-      localBestPosition[i] = currentPosition[i]
-    }
-    i = i + 1
-    
-  }
-}
-print(globalBestFitness)
-
-########### PSO_g ##########
-
-fitness<-function(operands){
-  particle_fitness<-1/(1+abs(50-sum(operands)))
-  return(particle_fitness)
-}
-
-particles<-list()
-no_of_particles<-20
-for(index in 1:no_of_particles){
-  particles[[index]]<-runif(10,min = -500,max = 500)
-}
-velocity<-list()
-for(index in 1:no_of_particles){
-  random_velocity<-runif(1,min = -1,max = 1)
-  velocity[[index]]<-rep(random_velocity,10)
-}
-
-
-no_of_iteration<-4
-
-w<-0.70
-c1<-0.20
-c2<-0.60
-particle_best<-list()
-particle_best_fitness<-c()
-particle_best<-particles
-particles_Sum<-c()
-par(mfrow=c(1,2))
-for(index in 1:no_of_particles){
-  particles_Sum[index]<-sum(particles[[index]])
-}
-
-plot(particles_Sum,type="p")
-
-for(iteration in 1:no_of_iteration){
-  particle_fitness<-c()
-  for(index in 1:no_of_particles){
-    particle_fitness[index]<-fitness(particles[[index]])
-    if(iteration == 1){
-      particle_best[[index]]<-particles[[index]]
-      particle_best_fitness[index]<-particle_fitness[index]
-      next
-    }
-    if(particle_fitness[index]>particle_best_fitness[index]){
-      particle_best[[index]]<-particles[[index]]
-      particle_best_fitness[index]<-particle_fitness[index]
     }
     
+    
+    classes[[length(classes)+1]] = class1
+    if(length(r)<=length(class1))
+      break
+    
+    r = r[-c(class1)]
   }
-  gbest_position<-which.max(particle_fitness)
-  new_velocity<-list()
-  for(index in 1:no_of_particles){
-    r1<-runif(1)
-    r2<-runif(1)
-    velocity[[index]]<-velocity[[index]]*w+c1*r1*(particle_best[[index]]-particles[[index]])+c2*r2*(particles[[gbest_position]]-particles[[index]])
-    particles[[index]]<-particles[[index]]+velocity[[index]]
-  }
+  
+  
+  return(classes)
+  
 }
-for(index in 1:no_of_particles){
-  particles_Sum[index]<-sum(particles[[index]])
-}
 
-plot(particles_Sum,type="p")
+mat = matrix(
+  c(
+    c(0.3,0.6,0.1),
+    c(0.2,0.4,0.4),
+    c(0.1,0.6,0.3),
+    c(0.7,0.2,0.1),
+    c(0.4,0.6,0)
+  ),
+  nrow = 5, byrow = TRUE
+)
 
-############ Greedy_Best #####
 
-library(igraph)
-#node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-#names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
+mat = cosine_amplitude(mat)
 
-#graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-#E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-node_heuristic<-c(223,222,166,192,165,136,122,111,100,60,32,102,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M')
-
-graph_1<-graph(edges = c('A','B','A','C','B','D','C','D','C','F','C','L','D','E','F','J','F','K','L','M','E','G','J','I','J','K','K','M','G','H','I','H'),directed = F)
-
-start_node<-'A'
-goal<-'M'
-
-V(graph_1)$color<-"white"
-E(graph_1)$color<-"black"
-
-open<-c()
-open[start_node]<-node_heuristic[start_node]
-closed<-c()
-path<-c()
-flag<-FALSE
-while(TRUE){
-  if(length(open)==0){
-    break
-  }
-  n<-names(open)[1]
-  if(n==goal){
-    path<-c(path,n)
-    flag<-TRUE
-    break
-  }
-  closed<-c(closed,open[1])
-  open<-open[-1]
-  adj<-adjacent_vertices(graph_1,n)
-  for(i in 1:length(adj[[1]])){
-    if(adj[[1]][i]$name %in% names(open) || adj[[1]][i]$name %in% names(closed)){
-      next
+f = 0
+if( is_reflexive(mat) && is_symmetric(mat) ){
+  count = 0
+  while(!is_transitive(mat)){
+    if(count <= dim(mat)[1]-1){
+      mat = max_min_composition(mat)
+      count = count + 1
     }
-    open[adj[[1]][i]$name]<-node_heuristic[adj[[1]][i]$name]
-  }
-  ordered_open<-order(as.numeric(open))
-  open<-open[ordered_open]
-  print(closed)
-  path<-c(path,n)
-}
-
-plot(graph_1)
-
-
-if(flag){
-  print(path)
-}else{
-  print("path not found")
-}
-
-########### Hill ######### 
-
-library(igraph)
-node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
-
-graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-start_node<-'A'
-goal<-'R'
-path<-c(start_node)
-n<-start_node
-flag<-FALSE
-while(TRUE){
-  if(n==goal){
-    flag<-TRUE
-    break
-  }
-  adj<-adjacent_vertices(graph_1,n)
-  min_cost_child<-adj[[1]][1]$name
-  for(i in 2:length(adj[[1]])){
-    if(node_heuristic[min_cost_child]>node_heuristic[adj[[1]][i]$name]){
-      min_cost_child<-adj[[1]][i]$name
+    else{
+      print("not equivalence")
+      f = 1
+      break
     }
   }
-  if(node_heuristic[n]<node_heuristic[min_cost_child]){
-    flag<-FALSE
-    break
-  }
-  n<-min_cost_child
-  path<-c(path,n)
-}
-if(flag){
-  print(path)
-} else{
-  print("stopped at local maxima")
-  print(path)
+  
+  
 }
 
-ordered_list<-order(as.numeric(node_heuristic))
-node_heuristic<-node_heuristic[ordered_list]
-print(node_heuristic)
-typeof(node_heuristic)
 
-#print(node_heuristic)
-#node_heuristic<-node_heuristic[names(node_heuristic)!='A']
-#print(node_heuristic)
+if(f == 0){
+  print("equivalence matrix")
+  print(mat)
+  mat = lambda_cut(mat, 0.80)
+  print("matrix after lamda cut")
+  print(mat)
+  print("equivalence classes")
+  print(get_equivalence_classes(mat))
+}
+
+## Mamdani
+
+library(sets)
+library(splines)
+sets_options("universe", seq(0,255))
+variables <- tuple(
+  SD = fuzzy_variable(NL = fuzzy_trapezoid(corners = c(-10,0,31,63)), NM = fuzzy_triangular(corners = c(31,63,95)), NS = fuzzy_triangular(corners = c(63,95,127)), ZE = fuzzy_triangular(corners = c(95,127,159)), PS = fuzzy_triangular(corners = c(127,159,191)), PM = fuzzy_triangular(corners = c(159,191,227)), PL = fuzzy_trapezoid(corners = c(191,227,255,370))),
+  AC = fuzzy_variable(NL = fuzzy_trapezoid(corners = c(-10,0,31,63)), NM = fuzzy_triangular(corners = c(31,63,95)), NS = fuzzy_triangular(corners = c(63,95,127)), ZE = fuzzy_triangular(corners = c(95,127,159)), PS = fuzzy_triangular(corners = c(127,159,191)), PM = fuzzy_triangular(corners = c(159,191,227)), PL = fuzzy_trapezoid(corners = c(191,227,255,370))),
+  TC = fuzzy_variable(NL = fuzzy_trapezoid(corners = c(-10,0,31,63)), NM = fuzzy_triangular(corners = c(31,63,95)), NS = fuzzy_triangular(corners = c(63,95,127)), ZE = fuzzy_triangular(corners = c(95,127,159)), PS = fuzzy_triangular(corners = c(127,159,191)), PM = fuzzy_triangular(corners = c(159,191,227)), PL = fuzzy_trapezoid(corners = c(191,227,255,370)))
+)
+
+# Fuzzy rules
+rules <- set(
+  fuzzy_rule(SD %is% NL && AC %is% ZE, TC %is% PL),
+  fuzzy_rule(SD %is% ZE && AC %is% NL, TC %is% PL),
+  fuzzy_rule(SD %is% NM && AC %is% ZE, TC %is% PM),
+  fuzzy_rule(SD %is% NS && AC %is% PS, TC %is% PS),
+  fuzzy_rule(SD %is% PS && AC %is% NS, TC %is% NS),
+  fuzzy_rule(SD %is% PL && AC %is% ZE, TC %is% NL),
+  fuzzy_rule(SD %is% ZE && AC %is% NS, TC %is% PS),
+  fuzzy_rule(SD %is% ZE && AC %is% NM, TC %is% PM)
+)
+
+model <- fuzzy_system(variables, rules)
+plot(model)
+
+example.1 <- fuzzy_inference(model, list(SD = 100, AC = 70))
+#membership functions
+print(example.1)
+
+#rule strength computation
+ans.1 <- gset_defuzzify(example.1, "centroid")
+ans.2 <- gset_defuzzify(example.1, "meanofmax")
+ans.3 <- gset_defuzzify(example.1, "smallestofmax")
+ans.4 <- gset_defuzzify(example.1, "largestofmax")
+
+plot(example.1)
+print("Centroid method:")
+print(ans.1)
+
+## max min
 
 
-########## A Algo ###########
-
-library(igraph)
-# node_heuristic<-c(240,186,182,163,170,150,165,139,120,130,122,104,100,77,72,65,65,0)
-# names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R')
-# 
-# graph_1<-graph(edges=c('A','B','A','C','A','D','A','E','B','K','C','I','D','N','E','J','K','H','I','L','I','M','I','F','N','F','N','J','J','Q','J','G','H','L','L','P','M','O','Q','R','Q','G','P','R','P','O','O','R'),directed=F)
-# E(graph_1)$weight<-c(73,64,89,104,83,64,89,40,35,28,20,31,84,53,80,35,36,63,50,65,113,65,41,72)
-
-node_heuristic<-c(223,222,166,192,165,136,122,111,100,60,32,102,0)
-names(node_heuristic)<-c('A','B','C','D','E','F','G','H','I','J','K','L','M')
-
-graph_1<-graph(edges = c('A','B','A','C','B','D','C','D','C','F','C','L','D','E','F','J','F','K','L','M','E','G','J','I','J','K','K','M','G','H','I','H'), directed = F)
-E(graph_1)$weight<-c(36,61,31,32,31,80,52,122,112,102,43,45,36,32,30,40)
-
-start_node<-'A'
-goal<-'M'
-
-plot(graph_1)
-
-V(graph_1)$color<-"white"
-E(graph_1)$color<-"black"
-
-open<-c()
-open[start_node]<-node_heuristic[start_node]
-closed<-c()
-path<-c()
-cost<-c()
-link<-c()
-cost[start_node]<-0
-print(cost[start_node])
-flag<-FALSE
-while(TRUE){
-  if(length(open)==0){
-    break
+max_min_relation  <<- function(l1,l2){
+  num = 0
+  dnm = 0
+  for(i in 1:(length(l1))){
+    num = num + min(l1[i],l2[i])
+    dnm =  dnm + max(l1[i],l2[i])
   }
-  n<-names(open)[1]
-  if(n==goal){
-    path<-c(path,n)
-    flag<-TRUE
-    break
+  return(num/dnm)
+}
+
+get_max_min_relation_mat <<- function(mat){
+  rel_mat = mat
+  for(i in 1:(length(mat)-1)){
+    rel_mat[[i]][i] = 1
+    for(j in c((i+1):length(mat))){
+      val = max_min_relation(mat[[i]],mat[[j]])
+      rel_mat[[i]][j] = val
+      rel_mat[[j]][i] = val
+    }
   }
-  closed<-c(closed,open[1])
-  open<-open[-1]
-  adj<-adjacent_vertices(graph_1,n)
-  for(i in 1:length(adj[[1]])){
-    ei<-get.edge.ids(graph_1,c(n,adj[[1]][i]$name))
-    cost_of_edge<-E(graph_1)[ei]$weight
-    cost_of_node<-cost[n]+cost_of_edge
-    total_node_heuristic<-node_heuristic[adj[[1]][i]$name]+cost_of_node
-    if(adj[[1]][i]$name %in% names(open)){
-      if(open[adj[[1]][i]$name]>total_node_heuristic){
-        open[adj[[1]][i]$name]<-total_node_heuristic
-        cost[adj[[1]][i]$name]<-cost_of_node
-        link[adj[[1]][i]$name]<-n
+  rel_mat[[length(mat)]][length(mat)] = 1
+  return(rel_mat)
+}
+
+
+
+
+
+
+is_reflexive <<- function(mat){
+  for(i in 1:length(mat)){
+    if(mat[[i]][[i]] != 1)
+      return(FALSE)
+  }
+  return(TRUE)
+}
+
+is_symmetric <<- function(mat){
+  for(i in 1:(length(mat)-1)){
+    for(j in c((i+1):length(mat))){
+      if(mat[[i]][[j]] != mat[[j]][[i]])
+        return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+do_lambdacut <<- function(mat, lambda){
+  for(i in 1:length(mat)){
+    for(j in 1:length(mat)){
+      if(mat[[i]][[j]] > lambda)
+        mat[[i]][[j]] = 1
+      else
+        mat[[i]][[j]] = 0
+    }
+  }
+  return(mat)
+}
+
+
+is_transitive <<- function(mat){
+  for(i in 1:(length(mat))){
+    for(j in c(1:(length(mat)))){
+      for(k in c(1:length(mat))){
+        if(mat[[i]][[k]] < min(mat[[i]][[j]],mat[[j]][[k]]))
+          return(FALSE)
       }
-      next
     }
-    if(adj[[1]][i]$name %in% names(closed)){
-      if(closed[adj[[1]][i]$name]>total_node_heuristic){
-        open[adj[[1]][i]$name]<-total_node_heuristic
-        cost[adj[[1]][i]$name]<-cost_of_node
-        link[adj[[1]][i]$name]<-n
-      }
-      next
-    }
-    open[adj[[1]][i]$name]<-node_heuristic[adj[[1]][i]$name]+cost_of_node
-    cost[adj[[1]][i]$name]<-cost_of_node
-    link[adj[[1]][i]$name]<-n
   }
-  ordered_open<-order(as.numeric(open))
-  open<-open[ordered_open]
-  print(open)
-  path<-c(path,n)
-}
-for(i in 2:length(path)){
-  ei <- get.edge.ids(graph_1, c(path[i],link[path[i]]))
-  E(graph_1)[ei]$color<-'orange'
-}
-plot(graph_1)
-print(cost[goal])
-if(flag){
-  print(path)
-}else{
-  print("path not found")
+  return(TRUE)
 }
 
-######################################
+do_composition <<- function(mat){
+  mat_2 = mat
+  for(i in 1:(length(mat))){
+    for(k in c(1:length(mat))){
+      temp_list = list()
+      for(j in c(1:length(mat))){
+        temp_list[length(temp_list)+1] = min( mat[[i]][[j]] , mat[[j]][[k]] )
+      }
+      mat_2[[i]][[k]] = max(unlist(temp_list))
+    }
+  }
+  return(mat_2)
+}
+
+#equivalence class
+get_class <<- function(mat){
+  final_list = list()
+  for(i in 1:length(mat)){
+    temp_list = c()
+    for(j in 1:length(mat)){
+      if(mat[[i]][[j]] == 1)
+        temp_list[length(temp_list)+1] = j
+    }
+    final_list[[length(final_list) + 1]] = temp_list
+  }
+  return(final_list)
+}
+
+
+
+
+
+
+# mat = list(c(1,0.836,0.913,0.683,0.981),
+#            c(0.836,1,0.934,0.390,0.745),
+#            c(0.913,0.934,1,0.44,0.818),
+#            c(0.683,0.390,0.44,1,0.754),
+#            c(0.981,0.745,0.818,0.754,1))
+mat = list(c(0.3,0.6,0.1),
+           c(0.2,0.4,0.4),
+           c(0.1,0.6,0.3),
+           c(0.7,0.2,0.1),
+           c(0.6,0.4,0))
+
+mat = get_max_min_relation_mat(mat)
+
+
+
+if( is_reflexive(mat) && is_symmetric(mat) && !is_transitive(mat) ){
+  count = 0
+  while(!is_transitive(mat)){
+    if(count <= length(mat)-1){
+      mat = do_composition(mat)
+      count = count + 1
+    }
+    else{
+      print("not equivalence")
+      break
+    }
+  }
+}
+
+
+
+print(count)
+print("equivalence matrix")
+print(mat)
+mat = do_lambdacut(mat, 0.80)
+print("matrix after lamda cut")
+print(mat)
+print("equivalence class")
+print(get_class(mat))
+
+## Cos-list
+
+
+
+get_cosine_relation  <<- function(l1,l2){
+  num = 0
+  dnm1 = 0
+  dnm2 = 0
+  for(i in 1:(length(l1))){
+    print(l1[i])
+    num = num + l1[i] * l2[i]
+    dnm1 =  dnm1 + l1[i] * l1[i]
+    dnm2 =  dnm2 + l2[i] * l2[i]
+  }
+  return(num/(sqrt(dnm1*dnm2)))
+}
+
+get_cosine_relation_mat <<- function(mat){
+  rel_mat = mat
+  for(i in 1:(length(mat)-1)){
+    rel_mat[[i]][i] = 1
+    for(j in c((i+1):length(mat))){
+      val = get_cosine_relation(mat[[i]],mat[[j]])
+      rel_mat[[i]][j] = val
+      rel_mat[[j]][i] = val
+    }
+  }
+  rel_mat[[length(mat)]][length(mat)] = 1
+  return(rel_mat)
+}
+
+
+
+
+
+
+is_reflexive <<- function(mat){
+  for(i in 1:length(mat)){
+    if(mat[[i]][[i]] != 1)
+      return(FALSE)
+  }
+  return(TRUE)
+}
+
+is_symmetric <<- function(mat){
+  for(i in 1:(length(mat)-1)){
+    for(j in c((i+1):length(mat))){
+      if(mat[[i]][[j]] != mat[[j]][[i]])
+        return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+do_lambdacut <<- function(mat, lambda){
+  for(i in 1:length(mat)){
+    for(j in 1:length(mat)){
+      if(mat[[i]][[j]] > lambda)
+        mat[[i]][[j]] = 1
+      else
+        mat[[i]][[j]] = 0
+    }
+  }
+  return(mat)
+}
+
+
+is_transitive <<- function(mat){
+  for(i in 1:(length(mat))){
+    for(j in c(1:(length(mat)))){
+      for(k in c(1:length(mat))){
+        if(mat[[i]][[k]] < min(mat[[i]][[j]],mat[[j]][[k]]))
+          return(FALSE)
+      }
+    }
+  }
+  return(TRUE)
+}
+
+do_composition <<- function(mat){
+  mat_2 = mat
+  for(i in 1:(length(mat))){
+    for(k in c(1:length(mat))){
+      temp_list = list()
+      for(j in c(1:length(mat))){
+        temp_list[length(temp_list)+1] = min( mat[[i]][[j]] , mat[[j]][[k]] )
+      }
+      mat_2[[i]][[k]] = max(unlist(temp_list))
+    }
+  }
+  return(mat_2)
+}
+
+#equivalence class
+get_class <<- function(mat){
+  final_list = list()
+  for(i in 1:length(mat)){
+    temp_list = c()
+    for(j in 1:length(mat)){
+      if(mat[[i]][[j]] == 1)
+        temp_list[length(temp_list)+1] = j
+    }
+    final_list[[length(final_list) + 1]] = temp_list
+  }
+  return(final_list)
+}
+
+
+
+
+
+
+# mat = list(c(1,0.836,0.913,0.683,0.981),
+#            c(0.836,1,0.934,0.390,0.745),
+#            c(0.913,0.934,1,0.44,0.818),
+#            c(0.683,0.390,0.44,1,0.754),
+#            c(0.981,0.745,0.818,0.754,1))
+mat = list(c(0.3,0.6,0.1),
+           c(0.2,0.4,0.4),
+           c(0.1,0.6,0.3),
+           c(0.7,0.2,0.1),
+           c(0.6,0.4,0))
+mat = get_cosine_relation_mat(mat)
+
+
+
+if( is_reflexive(mat) && is_symmetric(mat) && !is_transitive(mat) ){
+  count = 0
+  while(!is_transitive(mat)){
+    if(count <= length(mat)-1){
+      mat = do_composition(mat)
+      count = count + 1
+    }
+    else{
+      print("not equivalence")
+      break
+    }
+  }
+}
+
+
+
+print(count)
+print("equivalence matrix")
+print(mat)
+mat = do_lambdacut(mat, 0.80)
+print("matrix after lamda cut")
+print(mat)
+print("equivalence class")
+print(get_class(mat))
+
+## tsk
+
+## This example shows how to use frbs without
+## learning process.
+## Note: some variables might be shared for other examples.
+
+## Define shape and parameters of membership functions of input variables.
+## Please see fuzzifier function to contruct the matrix.
+#install.packages("frbs")
+library("frbs")
+# 1 is traingle, 4 is trap, nrow leave
+varinp.mf <- matrix(c(1, 1000, 1200, 1400, NA,
+                      1, 1200, 1600, 1800, NA,
+                      1, 2.5, 5, 7.5, NA,
+                      1, 6, 10, 14, NA
+),
+nrow = 5, byrow = FALSE)
+
+## Define number of fuzzy terms of input variables.
+## Suppose, we have 3, 2, 3, and 3 numbers of fuzzy terms
+## for first, second, third and fourth variables, respectively.
+
+# 2 input for variable 1 and 2 input for variable 2 , nrow leave
+num.fvalinput <- matrix(c(2, 2), nrow=1)
+
+## Give the names of the fuzzy terms of each input variable.
+## It should be noted that the names of the fuzzy terms must be unique,
+## so we put a number for making it unique.
+
+# name for variables
+varinput.1 <- c("asmall", "alarge")
+varinput.2 <- c("bsmall", "blarge")
+
+names.varinput <- c(varinput.1, varinput.2)
+
+## Set interval of data. var1 range, var2 range, output range
+range.data <- matrix(c(1000,1800, 0, 14, 0,6000), nrow=2)
+
+## Set weighted average method to be used as defuzzification method.
+type.defuz <- "WAM"
+## We are using standard t-norm and s-norm.
+type.tnorm <- "MIN"
+type.snorm <- "MAX"
+type.implication.func <- "ZADEH"
+
+## Give the name of simulation.
+name <- "Sim-0"
+
+## Provide new data for testing.
+
+# given input
+newdata<- matrix(c(1300, 6.5), nrow= 1, byrow = TRUE)
+## the names of variables
+colnames.var <- c("input1", "input2", "output1")
+
+#####################################################################
+## 1b. Using Takagi Sugeno Kang (TSK) Model
+#####################################################################
+
+type.model <- "TSK"
+
+## Define function of TSK
+# nrow is no of rules, au is large formula, au is small formula, au is large formula
+func.tsk<-matrix(c(4.692, -526.2, 2631, 
+                   3.4765, -210.5, 2103, 
+                   4.692, -526.2, 2631), nrow=3, byrow=TRUE)
+
+## Define the fuzzy IF-THEN rules;
+## For TSK model, it isn't necessary to put linguistic term in consequent parts.
+## Make sure that each rule has a "->" sign.
+
+#nrow is number of rules
+rule <- matrix(c("alarge","and","bsmall","->",
+                 "asmall","or","blarge", "->",  
+                 "asmall","and","bsmall","->"),
+               nrow=3, byrow=TRUE)
+
+## Generate a fuzzy model with frbs.gen.
+## It should be noted that for TSK model, we do not need to input:
+## num.fvaloutput, varout.mf, names.varoutput, type.defuz.
+##
+object <- frbs.gen(range.data, num.fvalinput, names.varinput, num.fvaloutput = NULL,
+                   varout.mf = NULL, names.varoutput = NULL, rule,
+                   varinp.mf, type.model, type.defuz = NULL, type.tnorm, type.snorm, func.tsk, colnames.var,
+                   type.implication.func, name)
+
+## We can plot the membership function
+plotMF(object)
+
+## Predicting using new data.
+res <- predict(object, newdata)$predicted.val
+
+## c_means
+
+m = 2
+num_clusters = 3
+num_iterations = 10
+
+x = list()
+x = iris[-5]
+for(i in seq(1:length(x))){
+  x[i] = (x[i]-min(x[i]))/(max(x[i])-min(x[i]))
+}
+
+mu = list()
+for(i in seq(1,num_clusters)){
+  mu[[i]] = runif(n = length(x[[i]]))
+}
+
+#normalize
+for(i in seq(1,num_clusters)){
+  mu[[i]] = mu[[i]] /  Reduce("+",mu[[i]])
+}
+
+
+for(i in seq(1,num_iterations)){
+  #centroid
+  centroid = list()
+  for(i in seq(1,num_clusters)){
+    centroid[[i]] = rep(1,length(x))  #dummy initialization
+    for(j in seq(1,length(x))){
+      centroid[[i]][j] = sum(mu[[i]]^m*x[[j]])/sum(mu[[i]]^m)
+    }
+  }
+  
+  #distance
+  dist = list()
+  for(i in seq(1,num_clusters)){
+    dist[[i]] = rep(0,length(x[[1]]))  #dummy initialization
+    for(j in seq(1,length(x))){
+      dist[[i]] = dist[[i]] + (centroid[[i]][j]-x[[j]])^2
+    }
+    dist[[i]] = 1 / sqrt(dist[[i]]) #reciprocal also done
+  }
+  
+  
+  #membership
+  for(i in seq(1,num_clusters)){
+    mu[[i]] = (  dist[[i]]^(1/(m-1)) ) / ( Reduce("+",dist)^(1/(m-1)) )
+  }
+}
+
+
+
+#print
+df = data.frame(x,mu)
+
+for(i in seq(1,length(x))){
+  colnames(df)[i] = paste("x",i,sep="")
+}
+for(i in seq(1,num_clusters)){
+  colnames(df)[i+length(x)] = paste("mu",i,sep="")
+}
+
+c = colnames(df[(length(x)+1):(length(x)+num_clusters)])[apply(df[(length(x)+1):(length(x)+num_clusters)],1,which.max)]
+df = cbind(df,c)
+print(df)
+
+
+
+#plot
+
+library(ggplot2)
+ggplot(data = iris, aes(x=Petal.Length, y=Petal.Width)) +
+  geom_point(aes(color=Species, shape=Species)) +
+  xlab("Petal Length") + 
+  ylab("Petal Width") +
+  ggtitle("Source - Petal Length vs Width")
+
+
+# Clusters
+ggplot(data = cbind(iris[-5],df$c), aes(x=Petal.Length, y=Petal.Width)) +
+  geom_point(aes(color=c, shape=c)) +
+  xlab("Petal Length") + 
+  ylab("Petal Width") +
+  ggtitle("Clusters - Petal Length vs Width")
+########################################################################
+# Replace values
+df$c <- as.character(df$c)
+df$c[df$c == "mu1"] <- "setosa"
+df$c[df$c == "mu2"] <- "virginica"
+df$c[df$c == "mu3"] <- "versicolor"
+
+
+# Accuracy Measures
+library(caret)
+tbl = table(iris$Species,df$c)
+confusionMatrix(tbl)
+
+for( level in levels(iris$Species)){
+  
+  print("___________________________________________")
+  print(level)
+  print(paste("Precision: ",precision(tbl,relevant = level)))
+  print(paste("Recall: ",recall(tbl,relevant = level)))
+  print(paste("F1 Measure: ",F_meas(tbl,relevant = level)))
+  
+}
+print("___________________________________________")
+
+
+
+library(precrec)
+#precrec_obj <- evalmod(scores = y, labels = x)
+#autoplot(precrec_obj)
